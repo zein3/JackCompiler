@@ -19,30 +19,6 @@ const string Tokenizer::SYMBOLLIST = "{}()[].,;+-*/&|<>=~";
 
 const regex Tokenizer::IDENTIFIERREGEX ( R"(^[^0-9][0-9a-zA-Z_]*$)" );
 
-//const map<string, Keyword> KEYWORDMAPPING = {
-    //{"class", Keyword::CLASS},
-    //{"constructor", Keyword::CONSTRUCTOR},
-    //{"function", Keyword::FUNCTION},
-    //{"method", Keyword::METHOD},
-    //{"field", Keyword::FIELD},
-    //{"static", Keyword::STATIC},
-    //{"var", Keyword::VAR},
-    //{"int", Keyword::INT},
-    //{"char", Keyword::CHAR},
-    //{"boolean", Keyword::BOOLEAN},
-    //{"void", Keyword::VOID},
-    //{"true", Keyword::TRUE},
-    //{"false", Keyword::FALSE},
-    //{"null", Keyword::kNULL},
-    //{"this", Keyword::THIS},
-    //{"let", Keyword::LET},
-    //{"do", Keyword::DO},
-    //{"if", Keyword::IF},
-    //{"else", Keyword::ELSE},
-    //{"while", Keyword::WHILE},
-    //{"return", Keyword::RETURN}
-//};
-
 const boost::bimap<string, Keyword> Tokenizer::KEYWORDMAPPING = boost::assign::list_of<boost::bimap<string, Keyword>::relation>
     ("class", Keyword::CLASS)
     ("constructor", Keyword::CONSTRUCTOR)

@@ -33,7 +33,6 @@ public:
     static const vector<string> KEYWORDLIST;
     static const string SYMBOLLIST;
     static const regex IDENTIFIERREGEX;
-    //static const map<string, Keyword> KEYWORDMAPPING;
     static const boost::bimap<string, Keyword> KEYWORDMAPPING;
 
     Tokenizer(istream &input);
