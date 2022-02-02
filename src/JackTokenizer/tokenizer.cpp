@@ -101,7 +101,7 @@ void Tokenizer::splitIntoTokens(string &code) {
 Tokenizer::Tokenizer(istream &input) {
     string fullCode = "";
     string line;
-    regex multilineComments ( R"(\/\*.*\*\/)" );
+    regex multilineComments ( R"(\/\*.*?\*\/)" );
     regex inlineComment ( R"(\/\/.*)" );
 
     while (getline(input, line)) {
@@ -121,6 +121,7 @@ Tokenizer::Tokenizer(istream &input) {
 
     // remove multiline comments
     fullCode = regex_replace(fullCode, multilineComments, "");
+
     
     // split the code into tokens
     splitIntoTokens(fullCode);
@@ -226,7 +227,7 @@ void Tokenizer::writeOutput(ostream &output) {
                 output << "<identifier> " << identifier() << " </identifier>" << endl;
                 break;
             case Token::INT_CONST:
-                output << "<integerConstant> " << intVal() << " </integerConstant" << endl;
+                output << "<integerConstant> " << intVal() << " </integerConstant>" << endl;
                 break;
             case Token::KEYWORD:
                 {
@@ -235,8 +236,18 @@ void Tokenizer::writeOutput(ostream &output) {
                     break;
                 }
             case Token::SYMBOL:
-                output << "<symbol> " << symbol() << " </symbol>" << endl;
-                break;
+                {
+                    if (symbol() == '<') {
+                        output << "<symbol> &lt; </symbol>" << endl;
+                    } else if (symbol() == '>') {
+                        output << "<symbol> &gt; </symbol>" << endl;
+                    } else if (symbol() == '&') {
+                        output << "<symbol> &amp; </symbol>" << endl;
+                    } else {
+                        output << "<symbol> " << symbol() << " </symbol>" << endl;
+                    }
+                    break;
+                }
             case Token::STRING_CONST:
                 output << "<stringConstant> " << stringVal() << " </stringConstant>" << endl;
                 break;
