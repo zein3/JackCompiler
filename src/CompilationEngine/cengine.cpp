@@ -1,6 +1,8 @@
 #include <CompilationEngine/cengine.hpp>
+#include <iostream>
 #include <fstream>
 #include <string>
+#include <stdexcept>
 
 using namespace std;
 
@@ -27,7 +29,7 @@ bool CompilationEngine::isUnaryOp(char s) {
 string CompilationEngine::keywordToStr(Keyword key) {
     auto result = Tokenizer::KEYWORDMAPPING.right.find(key);
     if (result == Tokenizer::KEYWORDMAPPING.right.end()) {
-        throw "Error: Unknown keyword";
+        throw runtime_error("Error: Unknown keyword");
     } else {
         return result->second;
     }
@@ -39,7 +41,7 @@ void CompilationEngine::eat(Keyword key) {
 
     string keyVal = keywordToStr(key);
     if (tokenizer.tokenType() != Token::KEYWORD || tokenizer.keyWord() != key) {
-        throw "Error: Unexpected keyword " + keyVal;
+        throw runtime_error("Error: Unexpected keyword " + keyVal);
     }
 
     output << "<keyword> " << keyVal << " </keyword>";
@@ -51,7 +53,7 @@ void CompilationEngine::eat(vector<Keyword> possibleKeyword) {
     Keyword key = tokenizer.keyWord();
 
     if (find(possibleKeyword.begin(), possibleKeyword.end(), key) == possibleKeyword.end()) {
-        throw "Error: Unexpected keyword " + keywordToStr(key);
+        throw runtime_error("Error: Unexpected keyword " + keywordToStr(key));
     } else {
         eat(key);
     }
@@ -62,7 +64,7 @@ void CompilationEngine::eat(char symbol) {
     writeIndent();
 
     if (tokenizer.tokenType() != Token::SYMBOL || tokenizer.symbol() != symbol) {
-        throw "Error: Expected symbol " + string(1, symbol);
+        throw runtime_error("Error: Expected symbol " + string(1, symbol));
     }
 
     output << "<symbol> ";
@@ -92,7 +94,7 @@ void CompilationEngine::eat(Token type) {
     writeIndent();
 
     if (tokenizer.tokenType() != type) {
-        throw "Error: Unexpected Token";
+        throw runtime_error("Error: Unexpected Token");
     }
 
     switch(type) {
@@ -109,7 +111,7 @@ void CompilationEngine::eat(Token type) {
             output << "<symbol> " << tokenizer.symbol() << " </symbol>";
             break;
         default:
-            throw "Error: expected identifier or constant";
+            throw runtime_error("Error: expected identifier or constant");
             break;
     }
 
@@ -122,12 +124,12 @@ void CompilationEngine::eatType() {
         eat(Token::IDENTIFIER);
     } else {
         if (tokenizer.tokenType() != Token::KEYWORD) {
-            throw "Expected type keyword";
+            throw runtime_error("Expected type keyword");
         }
 
         Keyword varType = tokenizer.keyWord();
         if (varType != Keyword::INT && varType != Keyword::CHAR && varType != Keyword::BOOLEAN) {
-            throw "Expected type keyword";
+            throw runtime_error("Expected type keyword");
         }
 
         eat(varType);
@@ -137,7 +139,7 @@ void CompilationEngine::eatType() {
 void CompilationEngine::eatSubroutineCall() {
     eat(Token::IDENTIFIER);
     if (tokenizer.tokenType() != Token::SYMBOL) {
-        throw "Error: Expected . or ( in subroutine call";
+        throw runtime_error("Error: Expected . or ( in subroutine call");
     }
 
     if (tokenizer.symbol() == '.') {
@@ -222,12 +224,14 @@ void CompilationEngine::compileClassVarDec() {
 void CompilationEngine::compileSubroutineDec() {
     eatBegin("subroutineDec");
 
-    // ( 'constructor' | 'function' | 'method' | 'void' | type )
+    // ( 'constructor' | 'function' | 'method' )
+    eat(vector<Keyword> {Keyword::CONSTRUCTOR, Keyword::FUNCTION, Keyword::METHOD});
+
+    // ( 'void' | type )
     if (tokenizer.tokenType() == Token::IDENTIFIER) {
         eat(Token::IDENTIFIER);
     } else {
-        eat(vector<Keyword> {Keyword::CONSTRUCTOR, Keyword::FUNCTION, Keyword::METHOD,
-                Keyword::VOID, Keyword::INT, Keyword::CHAR, Keyword::BOOLEAN});
+        eat(vector<Keyword> {Keyword::VOID, Keyword::INT, Keyword::CHAR, Keyword::BOOLEAN});
     }
 
     eat(Token::IDENTIFIER);
@@ -242,7 +246,13 @@ void CompilationEngine::compileSubroutineDec() {
 void CompilationEngine::compileParameterList() {
     eatBegin("parameterList");
 
-    if (tokenizer.tokenType() != Token::SYMBOL && tokenizer.tokenType() != Token::IDENTIFIER) {
+    // handle empty parameter
+    //if (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() == ')') {
+        //return;
+    //}
+
+    // if not type
+    if (tokenizer.tokenType() != Token::KEYWORD && tokenizer.tokenType() != Token::IDENTIFIER) {
         return;
     }
 
@@ -313,7 +323,7 @@ void CompilationEngine::compileStatements() {
                 compileReturn();
                 break;
             default:
-                throw "Error: Invalid statement";
+                throw runtime_error("Error: Invalid statement");
                 break;
         }
     }
@@ -423,8 +433,30 @@ void CompilationEngine::compileTerm() {
             eat(Token::STRING_CONST);
             break;
         case Token::IDENTIFIER:
-            // determine whether the term is varName or varName[expression] or subroutineCall
-            break;
+            {
+                // determine whether the term is varName or varName[expression] or subroutineCall
+                tokenizer.advance();
+                if (tokenizer.tokenType() == Token::SYMBOL) {
+                    char sym = tokenizer.symbol();
+                    if (sym == '(' || sym == '.') {
+                        tokenizer.backtrack();
+                        eatSubroutineCall();
+                        break;
+                    } else if (sym == '[') {
+                        tokenizer.backtrack();
+                        eat(Token::IDENTIFIER);
+                        eat('[');
+                        compileExpression();
+                        eat(']');
+                        break;
+                    }
+                }
+
+                // if neither varName[expression] nor subroutineCall
+                tokenizer.backtrack();
+                eat(Token::IDENTIFIER);
+                break;
+            }
         case Token::SYMBOL:
             {
                 // check if it is unary operator or parantheses
@@ -439,7 +471,7 @@ void CompilationEngine::compileTerm() {
                 break;
             }
         case Token::KEYWORD:
-            eat(Token::KEYWORD); // TODO: check if keyword is a keywordConstant
+            eat(vector<Keyword> {Keyword::TRUE, Keyword::FALSE, Keyword::kNULL, Keyword::THIS});
             break;
     }
 

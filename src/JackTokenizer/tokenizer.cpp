@@ -137,6 +137,12 @@ void Tokenizer::advance() {
     }
 }
 
+void Tokenizer::backtrack() {
+    if (tokenCounter > 0) {
+        tokenCounter--;
+    }
+}
+
 Token Tokenizer::tokenType() {
     string token = tokens[tokenCounter];
 

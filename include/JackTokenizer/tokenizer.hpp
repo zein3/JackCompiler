@@ -39,6 +39,7 @@ public:
     
     bool hasMoreTokens();
     void advance();
+    void backtrack();
     Token tokenType();
     Keyword keyWord();
     char symbol();
