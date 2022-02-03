@@ -237,6 +237,7 @@ void Tokenizer::writeOutput(ostream &output) {
                 }
             case Token::SYMBOL:
                 {
+                    // handle escape xml
                     if (symbol() == '<') {
                         output << "<symbol> &lt; </symbol>" << endl;
                     } else if (symbol() == '>') {
