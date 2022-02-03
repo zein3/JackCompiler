@@ -107,9 +107,6 @@ void CompilationEngine::eat(Token type) {
         case Token::STRING_CONST:
             output << "<stringConstant> " << tokenizer.stringVal() << " </stringConstant>";
             break;
-        case Token::SYMBOL:
-            output << "<symbol> " << tokenizer.symbol() << " </symbol>";
-            break;
         default:
             throw runtime_error("Error: expected identifier or constant");
             break;
@@ -246,13 +243,9 @@ void CompilationEngine::compileSubroutineDec() {
 void CompilationEngine::compileParameterList() {
     eatBegin("parameterList");
 
-    // handle empty parameter
-    //if (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() == ')') {
-        //return;
-    //}
-
     // if not type
     if (tokenizer.tokenType() != Token::KEYWORD && tokenizer.tokenType() != Token::IDENTIFIER) {
+        eatEnd("parameterList");
         return;
     }
 
@@ -262,6 +255,7 @@ void CompilationEngine::compileParameterList() {
     // 0 or more of (',' varName)
     while (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() == ',') {
         eat(',');
+        eatType();
         eat(Token::IDENTIFIER);
     }
 
@@ -415,7 +409,7 @@ void CompilationEngine::compileExpression() {
 
     compileTerm();
     while (tokenizer.tokenType() == Token::SYMBOL && isOp(tokenizer.symbol())) {
-        eat(Token::SYMBOL);
+        eat(tokenizer.symbol());
         compileTerm();
     }
 
@@ -461,7 +455,7 @@ void CompilationEngine::compileTerm() {
             {
                 // check if it is unary operator or parantheses
                 if (isUnaryOp(tokenizer.symbol())) {
-                    eat(Token::SYMBOL);
+                    eat(tokenizer.symbol());
                     compileTerm();
                 } else {
                     eat('(');
@@ -480,6 +474,12 @@ void CompilationEngine::compileTerm() {
 
 void CompilationEngine::compileExpressionList() {
     eatBegin("expressionList");
+
+    // handle empty expression list
+    if (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() != '(') {
+        eatEnd("expressionList");
+        return;
+    }
 
     compileExpression();
     while (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() == ',') {
