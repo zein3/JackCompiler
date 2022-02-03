@@ -26,10 +26,14 @@ class CompilationEngine {
     void eat(Token type);                       /* handle identifier, integer constant, and string constant */
 
     void eatType();                             /* handle eating type */
+    void eatSubroutineCall();
 
     void eatBegin(string tag);                  /* create a beginning tag like this <whileStatement> and increase indent by 2 */
     void eatEnd(string tag);                    /* create an ending tag like this </whileStatement> and decrease indent by 2 */
     void writeIndent();                         /* create an indentation according to indent var */
+
+    bool isOp(char s);                          /* check if symbol s is a binary operator */
+    bool isUnaryOp(char s);                     /* check if symbol s is a unary operator */
 
     string keywordToStr(Keyword key);
 

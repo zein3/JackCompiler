@@ -7,6 +7,23 @@ using namespace std;
 
 /* Begin Private Methods */
 
+bool CompilationEngine::isOp(char s) {
+    if (s == '+' || s == '-' || s == '*' ||
+            s == '/' || s == '&' ||
+            s == '|' || s == '<' ||
+            s == '>' || s == '=') {
+        return true;
+    }
+    return false;
+}
+
+bool CompilationEngine::isUnaryOp(char s) {
+    if (s == '-' || s == '~') {
+        return true;
+    }
+    return false;
+}
+
 string CompilationEngine::keywordToStr(Keyword key) {
     auto result = Tokenizer::KEYWORDMAPPING.right.find(key);
     if (result == Tokenizer::KEYWORDMAPPING.right.end()) {
@@ -88,6 +105,9 @@ void CompilationEngine::eat(Token type) {
         case Token::STRING_CONST:
             output << "<stringConstant> " << tokenizer.stringVal() << " </stringConstant>";
             break;
+        case Token::SYMBOL:
+            output << "<symbol> " << tokenizer.symbol() << " </symbol>";
+            break;
         default:
             throw "Error: expected identifier or constant";
             break;
@@ -112,6 +132,22 @@ void CompilationEngine::eatType() {
 
         eat(varType);
     }
+}
+
+void CompilationEngine::eatSubroutineCall() {
+    eat(Token::IDENTIFIER);
+    if (tokenizer.tokenType() != Token::SYMBOL) {
+        throw "Error: Expected . or ( in subroutine call";
+    }
+
+    if (tokenizer.symbol() == '.') {
+        eat('.');
+        eat(Token::IDENTIFIER);
+    }
+
+    eat('(');
+    compileExpressionList();
+    eat(')');
 }
 
 void CompilationEngine::eatBegin(string tag) {
@@ -254,6 +290,172 @@ void CompilationEngine::compileVarDec() {
     eat(';');
 
     eatEnd("varDec");
+}
+
+void CompilationEngine::compileStatements() {
+    eatBegin("statements");
+
+    while (tokenizer.tokenType() == Token::KEYWORD) {
+        switch(tokenizer.keyWord()) {
+            case Keyword::LET:
+                compileLet();
+                break;
+            case Keyword::IF:
+                compileIf();
+                break;
+            case Keyword::WHILE:
+                compileWhile();
+                break;
+            case Keyword::DO:
+                compileDo();
+                break;
+            case Keyword::RETURN:
+                compileReturn();
+                break;
+            default:
+                throw "Error: Invalid statement";
+                break;
+        }
+    }
+
+    eatEnd("statements");
+}
+
+void CompilationEngine::compileLet() {
+    eatBegin("letStatement");
+
+    eat(Keyword::LET);
+    eat(Token::IDENTIFIER);
+
+    // handle possibility of an array
+    if (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() == '[') {
+        eat('[');
+        compileExpression();
+        eat(']');
+    }
+
+    eat('=');
+    compileExpression();
+    eat(';');
+
+    eatEnd("letStatement");
+}
+
+void CompilationEngine::compileIf() {
+    eatBegin("ifStatement");
+
+    eat(Keyword::IF);
+    eat('(');
+    compileExpression();
+    eat(')');
+    eat('{');
+    compileStatements();
+    eat('}');
+
+    // handle possibility of an else statement
+    if (tokenizer.tokenType() == Token::KEYWORD && tokenizer.keyWord() == Keyword::ELSE) {
+        eat(Keyword::ELSE);
+        eat('{');
+        compileStatements();
+        eat('}');
+    }
+
+    eatEnd("ifStatement");
+}
+
+void CompilationEngine::compileWhile() {
+    eatBegin("whileStatement");
+
+    eat(Keyword::WHILE);
+    eat('(');
+    compileExpression();
+    eat(')');
+    eat('{');
+    compileStatements();
+    eat('}');
+
+    eatEnd("whileStatement");
+}
+
+void CompilationEngine::compileDo() {
+    eatBegin("doStatement");
+
+    eat(Keyword::DO);
+    eatSubroutineCall();
+    eat(';');
+
+    eatEnd("doStatement");
+}
+
+void CompilationEngine::compileReturn() {
+    eatBegin("returnStatement");
+
+    eat(Keyword::RETURN);
+    // check if there is an expression
+    if (tokenizer.tokenType() != Token::SYMBOL || tokenizer.symbol() != ';') {
+        compileExpression();
+    }
+    eat(';');
+
+    eatEnd("returnStatement");
+}
+
+void CompilationEngine::compileExpression() {
+    eatBegin("expression");
+
+    compileTerm();
+    while (tokenizer.tokenType() == Token::SYMBOL && isOp(tokenizer.symbol())) {
+        eat(Token::SYMBOL);
+        compileTerm();
+    }
+
+    eatEnd("expression");
+}
+
+void CompilationEngine::compileTerm() {
+    eatBegin("term");
+
+    switch(tokenizer.tokenType()) {
+        case Token::INT_CONST:
+            eat(Token::INT_CONST);
+            break;
+        case Token::STRING_CONST:
+            eat(Token::STRING_CONST);
+            break;
+        case Token::IDENTIFIER:
+            // determine whether the term is varName or varName[expression] or subroutineCall
+            break;
+        case Token::SYMBOL:
+            {
+                // check if it is unary operator or parantheses
+                if (isUnaryOp(tokenizer.symbol())) {
+                    eat(Token::SYMBOL);
+                    compileTerm();
+                } else {
+                    eat('(');
+                    compileExpression();
+                    eat(')');
+                }
+                break;
+            }
+        case Token::KEYWORD:
+            eat(Token::KEYWORD); // TODO: check if keyword is a keywordConstant
+            break;
+    }
+
+    eatEnd("term");
+}
+
+void CompilationEngine::compileExpressionList() {
+    eatBegin("expressionList");
+
+    compileExpression();
+    while (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() == ',') {
+        eat(',');
+        compileExpression();
+    }
+
+    eatEnd("expressionList");
 }
 
 /* End Public Methods */
