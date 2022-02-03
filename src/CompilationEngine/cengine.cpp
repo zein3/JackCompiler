@@ -7,17 +7,20 @@ using namespace std;
 
 /* Begin Private Methods */
 
+string CompilationEngine::keywordToStr(Keyword key) {
+    auto result = Tokenizer::KEYWORDMAPPING.right.find(key);
+    if (result == Tokenizer::KEYWORDMAPPING.right.end()) {
+        throw "Error: Unknown keyword";
+    } else {
+        return result->second;
+    }
+}
+
 // handle keyword
 void CompilationEngine::eat(Keyword key) {
     writeIndent();
 
-    auto result = Tokenizer::KEYWORDMAPPING.right.find(key);
-    if (result == Tokenizer::KEYWORDMAPPING.right.end()) {
-        throw "Error: Unknown keyword";
-    }
-
-    string keyVal = result->second;
-
+    string keyVal = keywordToStr(key);
     if (tokenizer.tokenType() != Token::KEYWORD || tokenizer.keyWord() != key) {
         throw "Error: Unexpected keyword " + keyVal;
     }
@@ -25,6 +28,16 @@ void CompilationEngine::eat(Keyword key) {
     output << "<keyword> " << keyVal << " </keyword>";
     output << endl;
     tokenizer.advance();
+}
+
+void CompilationEngine::eat(vector<Keyword> &possibleKeyword) {
+    Keyword key = tokenizer.keyWord();
+
+    if (find(possibleKeyword.begin(), possibleKeyword.end(), key) == possibleKeyword.end()) {
+        throw "Error: Unexpected keyword " + keywordToStr(key);
+    } else {
+        eat(key);
+    }
 }
 
 // handle symbol
@@ -132,6 +145,14 @@ void CompilationEngine::compileClass() {
 
     eat('}');
     eatEnd("class");
+}
+
+void CompilationEngine::compileClassVarDec() {
+    eatBegin("classVarDec");
+
+    // static or field
+
+    eatEnd("classVarDec");
 }
 
 /* End Public Methods */

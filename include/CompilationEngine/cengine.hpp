@@ -20,13 +20,16 @@ class CompilationEngine {
      * to handle char: put the symbol as a char
      * to handle the rest: just put the type
      */
-    void eat(Keyword key);      /* handle keyword */
-    void eat(char symbol);      /* handle symbol  */
-    void eat(Token type);       /* handle identifier, integer constant, and string constant */
+    void eat(Keyword key);                      /* handle keyword */
+    void eat(vector<Keyword> &possibleKeyword); /* handle keyword with multiple possibilities */
+    void eat(char symbol);                      /* handle symbol  */
+    void eat(Token type);                       /* handle identifier, integer constant, and string constant */
 
-    void eatBegin(string tag);  /* create a beginning tag like this <whileStatement> and increase indent by 2 */
-    void eatEnd(string tag);    /* create an ending tag like this </whileStatement> and decrease indent by 2 */
-    void writeIndent();         /* create an indentation according to indent var */
+    void eatBegin(string tag);                  /* create a beginning tag like this <whileStatement> and increase indent by 2 */
+    void eatEnd(string tag);                    /* create an ending tag like this </whileStatement> and decrease indent by 2 */
+    void writeIndent();                         /* create an indentation according to indent var */
+
+    string keywordToStr(Keyword key);
 
     CompilationEngine() = delete;
 public:
