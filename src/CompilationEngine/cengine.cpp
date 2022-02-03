@@ -30,7 +30,7 @@ void CompilationEngine::eat(Keyword key) {
     tokenizer.advance();
 }
 
-void CompilationEngine::eat(vector<Keyword> &possibleKeyword) {
+void CompilationEngine::eat(vector<Keyword> possibleKeyword) {
     Keyword key = tokenizer.keyWord();
 
     if (find(possibleKeyword.begin(), possibleKeyword.end(), key) == possibleKeyword.end()) {
@@ -97,6 +97,23 @@ void CompilationEngine::eat(Token type) {
     tokenizer.advance();
 }
 
+void CompilationEngine::eatType() {
+    if (tokenizer.tokenType() == Token::IDENTIFIER) {
+        eat(Token::IDENTIFIER);
+    } else {
+        if (tokenizer.tokenType() != Token::KEYWORD) {
+            throw "Expected type keyword";
+        }
+
+        Keyword varType = tokenizer.keyWord();
+        if (varType != Keyword::INT && varType != Keyword::CHAR && varType != Keyword::BOOLEAN) {
+            throw "Expected type keyword";
+        }
+
+        eat(varType);
+    }
+}
+
 void CompilationEngine::eatBegin(string tag) {
     writeIndent();
     output << "<" << tag << ">" << endl;
@@ -151,8 +168,92 @@ void CompilationEngine::compileClassVarDec() {
     eatBegin("classVarDec");
 
     // static or field
+    eat(vector<Keyword> {Keyword::STATIC, Keyword::FIELD});
+    eatType();
+    eat(Token::IDENTIFIER);
+
+    // 0 or more of (',' varName)
+    while (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() == ',') {
+        eat(',');
+        eat(Token::IDENTIFIER);
+    }
+
+    eat(';');
 
     eatEnd("classVarDec");
+}
+
+void CompilationEngine::compileSubroutineDec() {
+    eatBegin("subroutineDec");
+
+    // ( 'constructor' | 'function' | 'method' | 'void' | type )
+    if (tokenizer.tokenType() == Token::IDENTIFIER) {
+        eat(Token::IDENTIFIER);
+    } else {
+        eat(vector<Keyword> {Keyword::CONSTRUCTOR, Keyword::FUNCTION, Keyword::METHOD,
+                Keyword::VOID, Keyword::INT, Keyword::CHAR, Keyword::BOOLEAN});
+    }
+
+    eat(Token::IDENTIFIER);
+    eat('(');
+    compileParameterList();
+    eat(')');
+    compileSubroutineBody();
+
+    eatEnd("subroutineDec");
+}
+
+void CompilationEngine::compileParameterList() {
+    eatBegin("parameterList");
+
+    if (tokenizer.tokenType() != Token::SYMBOL && tokenizer.tokenType() != Token::IDENTIFIER) {
+        return;
+    }
+
+    eatType();
+    eat(Token::IDENTIFIER);
+
+    // 0 or more of (',' varName)
+    while (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() == ',') {
+        eat(',');
+        eat(Token::IDENTIFIER);
+    }
+
+    eatEnd("parameterList");
+}
+
+void CompilationEngine::compileSubroutineBody() {
+    eatBegin("subroutineBody");
+    
+    eat('{');
+
+    while (tokenizer.tokenType() == Token::KEYWORD && tokenizer.keyWord() == Keyword::VAR) {
+        compileVarDec();
+    }
+
+    compileStatements();
+
+    eat('}');
+
+    eatEnd("subroutineBody");
+}
+
+void CompilationEngine::compileVarDec() {
+    eatBegin("varDec");
+
+    eat(Keyword::VAR);
+    eatType();
+    eat(Token::IDENTIFIER);
+
+    // 0 or more of (',' varName)
+    while (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() == ',') {
+        eat(',');
+        eat(Token::IDENTIFIER);
+    }
+
+    eat(';');
+
+    eatEnd("varDec");
 }
 
 /* End Public Methods */

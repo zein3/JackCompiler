@@ -21,9 +21,11 @@ class CompilationEngine {
      * to handle the rest: just put the type
      */
     void eat(Keyword key);                      /* handle keyword */
-    void eat(vector<Keyword> &possibleKeyword); /* handle keyword with multiple possibilities */
+    void eat(vector<Keyword> possibleKeyword);  /* handle keyword with multiple possibilities */
     void eat(char symbol);                      /* handle symbol  */
     void eat(Token type);                       /* handle identifier, integer constant, and string constant */
+
+    void eatType();                             /* handle eating type */
 
     void eatBegin(string tag);                  /* create a beginning tag like this <whileStatement> and increase indent by 2 */
     void eatEnd(string tag);                    /* create an ending tag like this </whileStatement> and decrease indent by 2 */
