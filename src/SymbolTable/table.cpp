@@ -9,18 +9,18 @@ using namespace std;
 SymbolTable::SymbolTable() {
 }
 
-Var SymbolTable::find(string name) {
+Var *SymbolTable::find(string name) {
     auto resultSubroutine = subroutineTable.find(name);
     if (resultSubroutine != subroutineTable.end()) {
-        return resultSubroutine->second;
+        return &resultSubroutine->second;
     }
 
     auto resultClass = classTable.find(name);
     if (resultClass != classTable.end()) {
-        return resultClass->second;
+        return &resultClass->second;
     }
 
-    throw runtime_error("Error: use of undeclared variable " + name);
+    return nullptr;
 }
 
 
@@ -72,16 +72,22 @@ size_t SymbolTable::varCount(Kind kind) {
     return count;
 }
 
-Kind SymbolTable::kindOf(string name) {
-    return find(name).kind;
+Kind *SymbolTable::kindOf(string name) {
+    auto result = find(name);
+    if (result) return &result->kind;
+    else return nullptr;
 }
 
-string SymbolTable::typeOf(string name) {
-    return find(name).type;
+string *SymbolTable::typeOf(string name) {
+    auto result = find(name);
+    if (result) return &result->type;
+    else return nullptr;
 }
 
-size_t SymbolTable::indexOf(string name) {
-    return find(name).index;
+size_t *SymbolTable::indexOf(string name) {
+    auto result = find(name);
+    if (result) return &result->index;
+    else return nullptr;
 }
 
 
@@ -107,19 +113,23 @@ ostream &operator<<(ostream &out, Kind kind) {
 }
 
 void SymbolTable::printClassTable() {
+#if DEBUG
     cout << "Class Table: " << endl;
     for (auto it = classTable.begin(); it != classTable.end(); it++) {
         cout << it->first << ", " << it->second.type << ", " << it->second.kind << ", " << it->second.index << endl;
     }
 
     cout << endl << endl;
+#endif
 }
 
 void SymbolTable::printSubroutineTable() {
+#if DEBUG
     cout << "Subroutine Table: " << endl;
     for (auto it = subroutineTable.begin(); it != subroutineTable.end(); it++) {
         cout << it->first << ", " << it->second.type << ", " << it->second.kind << ", " << it->second.index << endl;
     }
 
     cout << endl << endl;
+#endif
 }

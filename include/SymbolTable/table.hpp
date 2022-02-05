@@ -11,7 +11,7 @@ class SymbolTable {
     unordered_map <string, Var> classTable;
     unordered_map <string, Var> subroutineTable;
 
-    Var find(string name);
+    Var *find(string name);
 public:
     SymbolTable();
     
@@ -19,9 +19,9 @@ public:
     void define(string name, string type, Kind kind);
     size_t varCount(Kind kind);
 
-    Kind kindOf(string name);
-    string typeOf(string name);
-    size_t indexOf(string name);
+    Kind *kindOf(string name);
+    string *typeOf(string name);
+    size_t *indexOf(string name);
 
     /* Used for testing */
     void printClassTable();
