@@ -2,6 +2,7 @@
 #define _COMPILATIONENGINE_HPP_
 
 #include <JackTokenizer/tokenizer.hpp>
+#include <SymbolTable/table.hpp>
 #include <fstream>
 #include <string>
 
@@ -12,6 +13,7 @@ class CompilationEngine {
     size_t indent = 0;
     ostream &output;
     Tokenizer tokenizer;
+    SymbolTable sTable;
 
     const size_t INDENTSIZE = 2;
     
@@ -25,7 +27,7 @@ class CompilationEngine {
     void eat(char symbol);                      /* handle symbol  */
     void eat(Token type);                       /* handle identifier, integer constant, and string constant */
 
-    void eatType();                             /* handle eating type */
+    string eatType();                             /* handle eating type */
     void eatSubroutineCall();
 
     void eatBegin(string tag);                  /* create a beginning tag like this <whileStatement> and increase indent by 2 */

@@ -22,6 +22,10 @@ public:
     Kind kindOf(string name);
     string typeOf(string name);
     size_t indexOf(string name);
+
+    /* Used for testing */
+    void printClassTable();
+    void printSubroutineTable();
 };
 
 #endif

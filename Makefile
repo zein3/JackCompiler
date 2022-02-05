@@ -10,6 +10,8 @@ SRC      :=                                \
    $(wildcard src/JackAnalyzer/*.cpp)      \
    $(wildcard src/JackTokenizer/*.cpp)     \
    $(wildcard src/CompilationEngine/*.cpp) \
+   $(wildcard src/SymbolTable/*.cpp)       \
+   $(wildcard src/VMWriter/*.cpp)		   \
    $(wildcard src/*.cpp)                   \
 
 OBJECTS  := $(SRC:%.cpp=$(OBJ_DIR)/%.o)

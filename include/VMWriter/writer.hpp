@@ -14,8 +14,8 @@ enum class Command {
     ADD, SUB, NEG, EQ, GT, LT, AND, OR, NOT
 };
 
-void operator<<(ostream &out, Segment seg);
-void operator<<(ostream &out, Command cmd);
+ostream &operator<<(ostream &out, Segment seg);
+ostream &operator<<(ostream &out, Command cmd);
 
 class VMWriter {
     ostream &output;

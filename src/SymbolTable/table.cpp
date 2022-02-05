@@ -1,9 +1,13 @@
 #include <SymbolTable/table.hpp>
 #include <SymbolTable/var.hpp>
 #include <stdexcept>
+#include <iostream>
 
 using namespace std;
 
+
+SymbolTable::SymbolTable() {
+}
 
 Var SymbolTable::find(string name) {
     auto resultSubroutine = subroutineTable.find(name);
@@ -16,7 +20,7 @@ Var SymbolTable::find(string name) {
         return resultClass->second;
     }
 
-    throw runtime_error("Error: use of undeclared variable");
+    throw runtime_error("Error: use of undeclared variable " + name);
 }
 
 
@@ -78,4 +82,44 @@ string SymbolTable::typeOf(string name) {
 
 size_t SymbolTable::indexOf(string name) {
     return find(name).index;
+}
+
+
+/* Methods for testing */
+
+ostream &operator<<(ostream &out, Kind kind) {
+    switch(kind) {
+        case Kind::ARG:
+            out << "argument";
+            break;
+        case Kind::FIELD:
+            out << "class variable";
+            break;
+        case Kind::STATIC:
+            out << "static variable";
+            break;
+        case Kind::VAR:
+            out << "local variable";
+            break;
+    }
+
+    return out;
+}
+
+void SymbolTable::printClassTable() {
+    cout << "Class Table: " << endl;
+    for (auto it = classTable.begin(); it != classTable.end(); it++) {
+        cout << it->first << ", " << it->second.type << ", " << it->second.kind << ", " << it->second.index << endl;
+    }
+
+    cout << endl << endl;
+}
+
+void SymbolTable::printSubroutineTable() {
+    cout << "Subroutine Table: " << endl;
+    for (auto it = subroutineTable.begin(); it != subroutineTable.end(); it++) {
+        cout << it->first << ", " << it->second.type << ", " << it->second.kind << ", " << it->second.index << endl;
+    }
+
+    cout << endl << endl;
 }

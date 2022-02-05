@@ -1,4 +1,6 @@
 #include <CompilationEngine/cengine.hpp>
+#include <SymbolTable/table.hpp>
+#include <SymbolTable/var.hpp>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -6,6 +8,23 @@
 
 using namespace std;
 
+
+/* Begin Helper Function */
+
+Kind keywordToKind(Keyword key) {
+    switch(key) {
+        case Keyword::STATIC:
+            return Kind::STATIC;
+        case Keyword::FIELD:
+            return Kind::FIELD;
+        case Keyword::VAR:
+            return Kind::VAR;
+        default:
+            throw runtime_error("Can't convert keyword to kind.");
+    }
+}
+
+/* End Helper Function */
 
 /* Begin Private Methods */
 
@@ -116,9 +135,11 @@ void CompilationEngine::eat(Token type) {
     tokenizer.advance();
 }
 
-void CompilationEngine::eatType() {
+string CompilationEngine::eatType() {
     if (tokenizer.tokenType() == Token::IDENTIFIER) {
+        string ret = tokenizer.identifier();
         eat(Token::IDENTIFIER);
+        return ret;
     } else {
         if (tokenizer.tokenType() != Token::KEYWORD) {
             throw runtime_error("Expected type keyword");
@@ -129,7 +150,9 @@ void CompilationEngine::eatType() {
             throw runtime_error("Expected type keyword");
         }
 
+        string ret = keywordToStr(varType);
         eat(varType);
+        return ret;
     }
 }
 
@@ -197,15 +220,21 @@ void CompilationEngine::compileClass() {
 
     eat('}');
     eatEnd("class");
+
+    sTable.printClassTable();
 }
 
 void CompilationEngine::compileClassVarDec() {
     eatBegin("classVarDec");
 
     // static or field
+    Kind kind = keywordToKind(tokenizer.keyWord());
     eat(vector<Keyword> {Keyword::STATIC, Keyword::FIELD});
-    eatType();
+    string type = eatType();
+    string name = tokenizer.identifier();
     eat(Token::IDENTIFIER);
+
+    sTable.define(name, type, kind);
 
     // 0 or more of (',' varName)
     while (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() == ',') {
@@ -220,6 +249,8 @@ void CompilationEngine::compileClassVarDec() {
 
 void CompilationEngine::compileSubroutineDec() {
     eatBegin("subroutineDec");
+
+    sTable.startSubroutine();
 
     // ( 'constructor' | 'function' | 'method' )
     eat(vector<Keyword> {Keyword::CONSTRUCTOR, Keyword::FUNCTION, Keyword::METHOD});
@@ -237,6 +268,8 @@ void CompilationEngine::compileSubroutineDec() {
     eat(')');
     compileSubroutineBody();
 
+    sTable.printSubroutineTable();
+
     eatEnd("subroutineDec");
 }
 
@@ -249,14 +282,20 @@ void CompilationEngine::compileParameterList() {
         return;
     }
 
-    eatType();
+    string type = eatType();
+    string name = tokenizer.identifier();
     eat(Token::IDENTIFIER);
+
+    sTable.define(name, type, Kind::ARG);
 
     // 0 or more of (',' varName)
     while (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() == ',') {
         eat(',');
-        eatType();
+        string type = eatType();
+        string name = tokenizer.identifier();
         eat(Token::IDENTIFIER);
+
+        sTable.define(name, type, Kind::ARG);
     }
 
     eatEnd("parameterList");
@@ -282,13 +321,18 @@ void CompilationEngine::compileVarDec() {
     eatBegin("varDec");
 
     eat(Keyword::VAR);
-    eatType();
+    string type = eatType();
+    string name = tokenizer.identifier();
     eat(Token::IDENTIFIER);
+
+    sTable.define(name, type, Kind::VAR);
 
     // 0 or more of (',' varName)
     while (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() == ',') {
         eat(',');
+        string name = tokenizer.identifier();
         eat(Token::IDENTIFIER);
+        sTable.define(name, type, Kind::VAR);
     }
 
     eat(';');
