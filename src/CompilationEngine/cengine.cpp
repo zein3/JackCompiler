@@ -600,9 +600,23 @@ void CompilationEngine::compileTerm() {
             vm.writePush(Segment::CONST, stoi(n));
             break;
         }
-        case Token::STRING_CONST:
-            eat(Token::STRING_CONST);
+        case Token::STRING_CONST: {
+            string str = eat(Token::STRING_CONST);
+            size_t strlen = str.length();
+            
+            // create a string array with the appropriate length
+            vm.writePush(Segment::CONST, strlen);
+            vm.writeCall("String.new", 1);
+
+            // append char to string array
+            for (size_t i = 0; i < strlen; i++) {
+                // push char c
+                vm.writePush(Segment::CONST, int(str[i]));
+                // call String.appendChar
+                vm.writeCall("String.appendChar", 2);
+            }
             break;
+        }
         case Token::IDENTIFIER: {
             // determine whether the term is varName or varName[expression] or subroutineCall
             tokenizer.advance();
