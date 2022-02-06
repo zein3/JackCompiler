@@ -12,6 +12,8 @@ class JackAnalyzer {
     static void analyzeFile(const fs::path &file);
     static void analyzeDir(const fs::path &dir);
 public:
+    inline static bool printXml = false;
+
     static bool analyze(string arg);
 };
 

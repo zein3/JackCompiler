@@ -12,12 +12,16 @@ void JackAnalyzer::analyzeFile(const fs::path &file) {
     string filename = file.string();
     filename = filename.substr(0, filename.find_last_of('.'));
 
-    fs::path output = fs::path(filename + ".xml");
+    fs::path outputxml = fs::path(filename + ".xml");
+    fs::path outputvm = fs::path(filename + ".vm");
 
     ifstream in (file);
-    ofstream out (output);
+    ofstream outvm (outputvm);
 
-    CompilationEngine engine(in, out);
+    ostream nullout(nullptr);
+    ostream &outxml = printXml ? cout : nullout;
+
+    CompilationEngine engine(in, outvm, outxml);
     engine.compileClass();
 }
 

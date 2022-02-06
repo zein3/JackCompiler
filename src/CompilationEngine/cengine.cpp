@@ -68,13 +68,14 @@ void CompilationEngine::eat(Keyword key) {
     tokenizer.advance();
 }
 
-void CompilationEngine::eat(vector<Keyword> possibleKeyword) {
+Keyword CompilationEngine::eat(vector<Keyword> possibleKeyword) {
     Keyword key = tokenizer.keyWord();
 
     if (find(possibleKeyword.begin(), possibleKeyword.end(), key) == possibleKeyword.end()) {
         throw runtime_error("Error: Unexpected keyword " + keywordToStr(key));
     } else {
         eat(key);
+        return key;
     }
 }
 
@@ -109,7 +110,8 @@ void CompilationEngine::eat(char symbol) {
 }
 
 // handle identifier, integer constant, and string constant
-void CompilationEngine::eat(Token type) {
+string CompilationEngine::eat(Token type) {
+    string value;
     writeIndent();
 
     if (tokenizer.tokenType() != type) {
@@ -118,13 +120,16 @@ void CompilationEngine::eat(Token type) {
 
     switch(type) {
         case Token::IDENTIFIER:
-            output << "<identifier> " << tokenizer.identifier() << " </identifier>";
+            value = tokenizer.identifier();
+            output << "<identifier> " << value << " </identifier>";
             break;
         case Token::INT_CONST:
-            output << "<integerConstant> " << tokenizer.intVal() << " </integerConstant>";
+            value = tokenizer.intVal();
+            output << "<integerConstant> " << value << " </integerConstant>";
             break;
         case Token::STRING_CONST:
-            output << "<stringConstant> " << tokenizer.stringVal() << " </stringConstant>";
+            value = tokenizer.stringVal();
+            output << "<stringConstant> " << value << " </stringConstant>";
             break;
         default:
             throw runtime_error("Error: expected identifier or constant");
@@ -133,6 +138,8 @@ void CompilationEngine::eat(Token type) {
 
     output << endl;
     tokenizer.advance();
+    
+    return value;
 }
 
 string CompilationEngine::eatType() {
@@ -142,7 +149,7 @@ string CompilationEngine::eatType() {
         return ret;
     } else {
         if (tokenizer.tokenType() != Token::KEYWORD) {
-            throw runtime_error("Expected type keyword");
+            throw runtime_error("Expected keyword");
         }
 
         Keyword varType = tokenizer.keyWord();
@@ -197,6 +204,7 @@ void CompilationEngine::writeIndent() {
 void CompilationEngine::compileClass() {
     eatBegin("class");
     eat(Keyword::CLASS);
+    className = tokenizer.identifier();
     eat(Token::IDENTIFIER);
     eat('{');
 
@@ -231,15 +239,15 @@ void CompilationEngine::compileClassVarDec() {
     Kind kind = keywordToKind(tokenizer.keyWord());
     eat(vector<Keyword> {Keyword::STATIC, Keyword::FIELD});
     string type = eatType();
-    string name = tokenizer.identifier();
-    eat(Token::IDENTIFIER);
+    string name = eat(Token::IDENTIFIER);
 
     sTable.define(name, type, kind);
 
     // 0 or more of (',' varName)
     while (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() == ',') {
         eat(',');
-        eat(Token::IDENTIFIER);
+        name = eat(Token::IDENTIFIER);
+        sTable.define(name, type, kind);
     }
 
     eat(';');
@@ -248,12 +256,15 @@ void CompilationEngine::compileClassVarDec() {
 }
 
 void CompilationEngine::compileSubroutineDec() {
+    // Parse
     eatBegin("subroutineDec");
 
+    // clear subroutine table and switch vm writer buffer to string buffer
     sTable.startSubroutine();
+    vm.switchBuffer(Buffer::STRING);
 
     // ( 'constructor' | 'function' | 'method' )
-    eat(vector<Keyword> {Keyword::CONSTRUCTOR, Keyword::FUNCTION, Keyword::METHOD});
+    Keyword ftype = eat(vector<Keyword> {Keyword::CONSTRUCTOR, Keyword::FUNCTION, Keyword::METHOD});
 
     // ( 'void' | type )
     if (tokenizer.tokenType() == Token::IDENTIFIER) {
@@ -262,15 +273,45 @@ void CompilationEngine::compileSubroutineDec() {
         eat(vector<Keyword> {Keyword::VOID, Keyword::INT, Keyword::CHAR, Keyword::BOOLEAN});
     }
 
-    eat(Token::IDENTIFIER);
+    // add the 'this' variable in symbol table if subroutine is a method
+    if (ftype == Keyword::METHOD) {
+        sTable.define("this", className, Kind::ARG);
+    }
+
+    string subroutineName = eat(Token::IDENTIFIER);
     eat('(');
     compileParameterList();
     eat(')');
-    compileSubroutineBody();
 
+    compileSubroutineBody();
     sTable.printSubroutineTable();
 
     eatEnd("subroutineDec");
+
+    
+    // Write code
+    vm.switchBuffer(Buffer::FILE);
+    // declare function
+    vm.writeFunction(className + "." + subroutineName, sTable.varCount(Kind::VAR));
+    switch(ftype) {
+        case Keyword::CONSTRUCTOR:
+            vm.writePush(Segment::CONST, sTable.varCount(Kind::FIELD));
+            vm.writeCall("Memory.alloc", 1);
+            vm.writePop(Segment::POINTER, 0);
+            break;
+        case Keyword::METHOD:
+            // this = arg[0]
+            vm.writePush(Segment::ARG, 0);
+            vm.writePop(Segment::POINTER, 0);
+            break;
+        case Keyword::FUNCTION:
+            break;
+        default:
+            break;
+    }
+
+    // write body
+    vm.writeNow();
 }
 
 void CompilationEngine::compileParameterList() {

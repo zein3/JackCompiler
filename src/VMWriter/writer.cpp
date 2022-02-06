@@ -71,38 +71,54 @@ ostream &operator<<(ostream &out, Command cmd) {
 }
 
 
+void VMWriter::switchBuffer(Buffer bf) {
+    switch (bf) {
+        case Buffer::FILE:
+            output = &fileBuffer;
+            break;
+        case Buffer::STRING:
+            output = &stringBuffer;
+            break;
+    }
+}
+
 void VMWriter::writePush(Segment segment, int index) {
-    output << "  push " << segment << " " << index << endl;
+    *output << "  push " << segment << " " << index << endl;
 }
 
 void VMWriter::writePop(Segment segment, int index) {
-    output << "  pop " << segment << " " << index << endl;
+    *output << "  pop " << segment << " " << index << endl;
 }
 
 void VMWriter::writeArithmetic(Command command) {
-    output << "  " << command << endl;
+    *output << "  " << command << endl;
 }
 
 void VMWriter::writeLabel(string label) {
-    output << "label " << label << endl;
+    *output << "label " << label << endl;
 }
 
 void VMWriter::writeGoto(string label) {
-    output << "  goto " << label << endl;
+    *output << "  goto " << label << endl;
 }
 
 void VMWriter::writeIf(string label) {
-    output << "  if-goto " << label << endl;
+    *output << "  if-goto " << label << endl;
 }
 
 void VMWriter::writeCall(string name, int nArgs) {
-    output << "  call " << name << " " << nArgs << endl;
+    *output << "  call " << name << " " << nArgs << endl;
 }
 
 void VMWriter::writeFunction(string name, int nLocals) {
-    output << "function " << name << " " << nLocals << endl;
+    *output << "function " << name << " " << nLocals << endl;
 }
 
 void VMWriter::writeReturn() {
-    output << "  return" << endl;
+    *output << "  return" << endl;
+}
+
+void VMWriter::writeNow() {
+    fileBuffer << stringBuffer.str();
+    stringBuffer.str("");
 }

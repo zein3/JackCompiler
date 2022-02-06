@@ -3,6 +3,7 @@
 
 #include <JackTokenizer/tokenizer.hpp>
 #include <SymbolTable/table.hpp>
+#include <VMWriter/writer.hpp>
 #include <fstream>
 #include <string>
 
@@ -11,9 +12,11 @@ using namespace std;
 
 class CompilationEngine {
     size_t indent = 0;
+    string className = "";
     ostream &output;
     Tokenizer tokenizer;
     SymbolTable sTable;
+    VMWriter vm;
 
     const size_t INDENTSIZE = 2;
     
@@ -23,9 +26,9 @@ class CompilationEngine {
      * to handle the rest: just put the type
      */
     void eat(Keyword key);                      /* handle keyword */
-    void eat(vector<Keyword> possibleKeyword);  /* handle keyword with multiple possibilities */
+    Keyword eat(vector<Keyword> possibleKeyword);  /* handle keyword with multiple possibilities, returns keyword used */
     void eat(char symbol);                      /* handle symbol  */
-    void eat(Token type);                       /* handle identifier, integer constant, and string constant */
+    string eat(Token type);                     /* handle identifier, integer constant, and string constant */
 
     string eatType();                             /* handle eating type */
     void eatSubroutineCall();
@@ -41,12 +44,12 @@ class CompilationEngine {
 
     CompilationEngine() = delete;
 public:
-    CompilationEngine(istream &in, ostream &out) : output{out}, tokenizer{in} {}
+    CompilationEngine(istream &in, ostream &outvm, ostream &outxml) : output{outxml}, tokenizer{in}, vm{outvm} {}
 
     void compileClass();
     void compileClassVarDec();
     void compileSubroutineDec();
-    void compileParameterList();
+    void compileParameterList();              /* returns the number of parameter in the list */
     void compileSubroutineBody();
     void compileVarDec();
     void compileStatements();
