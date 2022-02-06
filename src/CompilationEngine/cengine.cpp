@@ -559,7 +559,7 @@ void CompilationEngine::compileTerm() {
                 if (sym == '(' || sym == '.') {
                     tokenizer.backtrack();
                     eatSubroutineCall();
-                    break;
+                    break;  /* break from the switch statement */
                 } else if (sym == '[') {
                     tokenizer.backtrack();
                     eat(Token::IDENTIFIER);
@@ -572,7 +572,17 @@ void CompilationEngine::compileTerm() {
 
             // if neither varName[expression] nor subroutineCall
             tokenizer.backtrack();
-            eat(Token::IDENTIFIER);
+            string varName = eat(Token::IDENTIFIER);
+
+            // get the location of variable in memory
+            size_t *varIndex = sTable.indexOf(varName);
+            Kind *varKind = sTable.kindOf(varName);
+            if (varIndex == nullptr) {
+                throw runtime_error(string("Undeclared variable: " + varName));
+            }
+            // write the code to push the variable
+            vm.writePush(kindToSegment(*varKind), *varIndex);
+
             break;
         }
         case Token::SYMBOL: {

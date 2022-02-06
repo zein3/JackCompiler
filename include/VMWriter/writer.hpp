@@ -1,6 +1,7 @@
 #ifndef _VMWRITER_HPP_
 #define _VMWRITER_HPP_
 
+#include "SymbolTable/var.hpp"
 #include <fstream>
 #include <sstream>
 
@@ -22,6 +23,7 @@ enum class Buffer {
 ostream &operator<<(ostream &out, Segment seg);
 ostream &operator<<(ostream &out, Command cmd);
 Command charToCommand(char c);
+Segment kindToSegment(Kind k);
 
 class VMWriter {
     ostream &fileBuffer;

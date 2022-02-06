@@ -91,6 +91,21 @@ Command charToCommand(char c) {
     }
 }
 
+Segment kindToSegment(Kind k) {
+    switch(k) {
+        case Kind::ARG:
+            return Segment::ARG;
+        case Kind::FIELD:
+            return Segment::THIS;
+        case Kind::STATIC:
+            return Segment::STATIC;
+        case Kind::VAR:
+            return Segment::LOCAL;
+        default:
+            throw runtime_error("Cannot convert kind to segment");
+    }
+}
+
 
 void VMWriter::switchBuffer(Buffer bf) {
     switch (bf) {
