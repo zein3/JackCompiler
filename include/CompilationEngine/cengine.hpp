@@ -30,8 +30,8 @@ class CompilationEngine {
     void eat(char symbol);                      /* handle symbol  */
     string eat(Token type);                     /* handle identifier, integer constant, and string constant */
 
-    string eatType();                             /* handle eating type */
-    void eatSubroutineCall();
+    string eatType();                           /* handle eating type */
+    string eatSubroutineCall();                 /* returns the subroutine name */
 
     void eatBegin(string tag);                  /* create a beginning tag like this <whileStatement> and increase indent by 2 */
     void eatEnd(string tag);                    /* create an ending tag like this </whileStatement> and decrease indent by 2 */
@@ -60,7 +60,7 @@ public:
     void compileReturn();
     void compileExpression();
     void compileTerm();
-    void compileExpressionList();
+    size_t compileExpressionList();             /* returns the number of expression */
 };
 
 #endif

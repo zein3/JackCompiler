@@ -60,7 +60,7 @@ void CompilationEngine::eat(Keyword key) {
 
     string keyVal = keywordToStr(key);
     if (tokenizer.tokenType() != Token::KEYWORD || tokenizer.keyWord() != key) {
-        throw runtime_error("Error: Unexpected keyword " + keyVal);
+        throw runtime_error(string("Error: Unexpected keyword " + keyVal));
     }
 
     output << "<keyword> " << keyVal << " </keyword>";
@@ -163,20 +163,40 @@ string CompilationEngine::eatType() {
     }
 }
 
-void CompilationEngine::eatSubroutineCall() {
-    eat(Token::IDENTIFIER);
+string CompilationEngine::eatSubroutineCall() {
+    string callName = eat(Token::IDENTIFIER);
+    size_t nArgs = 0;
     if (tokenizer.tokenType() != Token::SYMBOL) {
         throw runtime_error("Error: Expected . or ( in subroutine call");
     }
 
-    if (tokenizer.symbol() == '.') {
+    if (tokenizer.symbol() == '.') { /* is it a call to another class? */
         eat('.');
-        eat(Token::IDENTIFIER);
+        string fnName = eat(Token::IDENTIFIER);
+
+        // is it a call to an object's method or a class's function?
+        // if it exists in the symbol table, then it is object's method
+        string *objClass = sTable.typeOf(callName);
+        if (objClass != nullptr) {
+            callName = *objClass + "." + fnName;
+            // push this and add nArgs by 1
+            vm.writePush(Segment::POINTER, 0);
+            nArgs++;
+        } else {
+            callName += "." + fnName;
+        }
+    } else {
+        callName = className + "." + callName;
     }
 
     eat('(');
-    compileExpressionList();
+    nArgs += compileExpressionList();
     eat(')');
+    
+    // write code for function calls
+    vm.writeCall(callName, nArgs);
+
+    return callName;
 }
 
 void CompilationEngine::eatBegin(string tag) {
@@ -473,6 +493,10 @@ void CompilationEngine::compileDo() {
     eatSubroutineCall();
     eat(';');
 
+    // subroutine is assumed to be void in a do statement
+    // therefore it must not return any variable
+    vm.writePop(Segment::TEMP, 0);
+
     eatEnd("doStatement");
 }
 
@@ -597,22 +621,25 @@ void CompilationEngine::compileTerm() {
     eatEnd("term");
 }
 
-void CompilationEngine::compileExpressionList() {
+size_t CompilationEngine::compileExpressionList() {
     eatBegin("expressionList");
 
     // handle empty expression list
     if (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() != '(') {
         eatEnd("expressionList");
-        return;
+        return 0;
     }
 
+    size_t count = 1;
     compileExpression();
     while (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() == ',') {
+        count++;
         eat(',');
         compileExpression();
     }
 
     eatEnd("expressionList");
+    return count;
 }
 
 /* End Public Methods */
