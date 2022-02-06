@@ -158,3 +158,12 @@ void VMWriter::writeNow() {
     fileBuffer << stringBuffer.str();
     stringBuffer.str("");
 }
+
+size_t VMWriter::getUniq() {
+    return uniq++;
+}
+
+string VMWriter::generateLabel() {
+    size_t id = getUniq();
+    return "L" + to_string(id);
+}

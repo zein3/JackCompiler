@@ -29,10 +29,13 @@ class VMWriter {
     ostream &fileBuffer;
     ostringstream stringBuffer;
     ostream *output;
+    size_t uniq = 0;
 
     inline static const size_t INDENT_SIZE = 4;
 
     VMWriter() = delete;
+
+    size_t getUniq();                               /* generate a unique id */
 public:
     VMWriter(ostream &out) : fileBuffer {out}, output {&fileBuffer} {}
 
@@ -49,6 +52,7 @@ public:
     void writeReturn();
 
     void writeNow();                                /* write the content of string buffer to file buffer, and empty string buffer */
+    string generateLabel();                         /* generate unique lable */
 };
 
 #endif

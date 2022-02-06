@@ -453,13 +453,25 @@ void CompilationEngine::compileLet() {
 void CompilationEngine::compileIf() {
     eatBegin("ifStatement");
 
+    string label1 = vm.generateLabel();
+    string label2 = vm.generateLabel();
+
     eat(Keyword::IF);
     eat('(');
     compileExpression();
+
+    vm.writeArithmetic(Command::NOT);
+    vm.writeIf(label1);
+
     eat(')');
     eat('{');
     compileStatements();
+
+    vm.writeGoto(label2);
+
     eat('}');
+
+    vm.writeLabel(label1);
 
     // handle possibility of an else statement
     if (tokenizer.tokenType() == Token::KEYWORD && tokenizer.keyWord() == Keyword::ELSE) {
@@ -469,19 +481,33 @@ void CompilationEngine::compileIf() {
         eat('}');
     }
 
+    vm.writeLabel(label2);
+
     eatEnd("ifStatement");
 }
 
 void CompilationEngine::compileWhile() {
     eatBegin("whileStatement");
 
+    string label1 = vm.generateLabel();
+    string label2 = vm.generateLabel();
+
+    vm.writeLabel(label1);
+
     eat(Keyword::WHILE);
     eat('(');
     compileExpression();
     eat(')');
+
+    vm.writeArithmetic(Command::NOT);
+    vm.writeIf(label2);
+
     eat('{');
     compileStatements();
     eat('}');
+    vm.writeGoto(label1);
+
+    vm.writeLabel(label2);
 
     eatEnd("whileStatement");
 }
@@ -507,8 +533,12 @@ void CompilationEngine::compileReturn() {
     // check if there is an expression
     if (tokenizer.tokenType() != Token::SYMBOL || tokenizer.symbol() != ';') {
         compileExpression();
+    } else {
+        vm.writePush(Segment::CONST, 0);
     }
     eat(';');
+
+    vm.writeReturn();
 
     eatEnd("returnStatement");
 }
@@ -519,7 +549,7 @@ void CompilationEngine::compileExpression() {
     compileTerm();
     while (tokenizer.tokenType() == Token::SYMBOL && isOp(tokenizer.symbol())) {
         char op = tokenizer.symbol();
-        eat(tokenizer.symbol());
+        eat(op);
         compileTerm();
 
         // write arithmetic command
