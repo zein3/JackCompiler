@@ -28,6 +28,8 @@ class VMWriter {
     ostringstream stringBuffer;
     ostream *output;
 
+    inline static const size_t INDENT_SIZE = 4;
+
     VMWriter() = delete;
 public:
     VMWriter(ostream &out) : fileBuffer {out}, output {&fileBuffer} {}

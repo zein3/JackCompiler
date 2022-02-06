@@ -104,15 +104,15 @@ void VMWriter::switchBuffer(Buffer bf) {
 }
 
 void VMWriter::writePush(Segment segment, int index) {
-    *output << "  push " << segment << " " << index << endl;
+    *output << string(INDENT_SIZE, ' ') << "push " << segment << " " << index << endl;
 }
 
 void VMWriter::writePop(Segment segment, int index) {
-    *output << "  pop " << segment << " " << index << endl;
+    *output << string(INDENT_SIZE, ' ') << "pop " << segment << " " << index << endl;
 }
 
 void VMWriter::writeArithmetic(Command command) {
-    *output << "  " << command << endl;
+    *output << string(INDENT_SIZE, ' ') << command << endl;
 }
 
 void VMWriter::writeLabel(string label) {
@@ -120,15 +120,15 @@ void VMWriter::writeLabel(string label) {
 }
 
 void VMWriter::writeGoto(string label) {
-    *output << "  goto " << label << endl;
+    *output << string(INDENT_SIZE, ' ') << "goto " << label << endl;
 }
 
 void VMWriter::writeIf(string label) {
-    *output << "  if-goto " << label << endl;
+    *output << string(INDENT_SIZE, ' ') << "if-goto " << label << endl;
 }
 
 void VMWriter::writeCall(string name, int nArgs) {
-    *output << "  call " << name << " " << nArgs << endl;
+    *output << string(INDENT_SIZE, ' ') << "call " << name << " " << nArgs << endl;
 }
 
 void VMWriter::writeFunction(string name, int nLocals) {
@@ -136,7 +136,7 @@ void VMWriter::writeFunction(string name, int nLocals) {
 }
 
 void VMWriter::writeReturn() {
-    *output << "  return" << endl;
+    *output << string(INDENT_SIZE, ' ') << "return" << endl;
 }
 
 void VMWriter::writeNow() {
