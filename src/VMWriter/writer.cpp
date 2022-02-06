@@ -70,6 +70,27 @@ ostream &operator<<(ostream &out, Command cmd) {
     return out;
 }
 
+Command charToCommand(char c) {
+    switch(c) {
+        case '+':
+            return Command::ADD;
+        case '-':
+            return Command::SUB;
+        case '&':
+            return Command::AND;
+        case '|':
+            return Command::OR;
+        case '<':
+            return Command::LT;
+        case '>':
+            return Command::GT;
+        case '=':
+            return Command::EQ;
+        default:
+            throw runtime_error("Unknown symbol " + string(1, c));
+    }
+}
+
 
 void VMWriter::switchBuffer(Buffer bf) {
     switch (bf) {

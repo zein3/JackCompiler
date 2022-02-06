@@ -124,7 +124,7 @@ string CompilationEngine::eat(Token type) {
             output << "<identifier> " << value << " </identifier>";
             break;
         case Token::INT_CONST:
-            value = tokenizer.intVal();
+            value = to_string(tokenizer.intVal());
             output << "<integerConstant> " << value << " </integerConstant>";
             break;
         case Token::STRING_CONST:
@@ -494,8 +494,22 @@ void CompilationEngine::compileExpression() {
 
     compileTerm();
     while (tokenizer.tokenType() == Token::SYMBOL && isOp(tokenizer.symbol())) {
+        char op = tokenizer.symbol();
         eat(tokenizer.symbol());
         compileTerm();
+
+        // write arithmetic command
+        switch(op) {
+            case '*':
+                vm.writeCall("Math.multiply", 2);
+                break;
+            case '/':
+                vm.writeCall("Math.divide", 2);
+                break;
+            default:
+                vm.writeArithmetic(charToCommand(op));
+                break;
+        }
     }
 
     eatEnd("expression");
@@ -505,53 +519,79 @@ void CompilationEngine::compileTerm() {
     eatBegin("term");
 
     switch(tokenizer.tokenType()) {
-        case Token::INT_CONST:
-            eat(Token::INT_CONST);
+        case Token::INT_CONST: {
+            string n = eat(Token::INT_CONST);
+            vm.writePush(Segment::CONST, stoi(n));
             break;
+        }
         case Token::STRING_CONST:
             eat(Token::STRING_CONST);
             break;
-        case Token::IDENTIFIER:
-            {
-                // determine whether the term is varName or varName[expression] or subroutineCall
-                tokenizer.advance();
-                if (tokenizer.tokenType() == Token::SYMBOL) {
-                    char sym = tokenizer.symbol();
-                    if (sym == '(' || sym == '.') {
-                        tokenizer.backtrack();
-                        eatSubroutineCall();
-                        break;
-                    } else if (sym == '[') {
-                        tokenizer.backtrack();
-                        eat(Token::IDENTIFIER);
-                        eat('[');
-                        compileExpression();
-                        eat(']');
-                        break;
-                    }
+        case Token::IDENTIFIER: {
+            // determine whether the term is varName or varName[expression] or subroutineCall
+            tokenizer.advance();
+            if (tokenizer.tokenType() == Token::SYMBOL) {
+                char sym = tokenizer.symbol();
+                if (sym == '(' || sym == '.') {
+                    tokenizer.backtrack();
+                    eatSubroutineCall();
+                    break;
+                } else if (sym == '[') {
+                    tokenizer.backtrack();
+                    eat(Token::IDENTIFIER);
+                    eat('[');
+                    compileExpression();
+                    eat(']');
+                    break;
                 }
-
-                // if neither varName[expression] nor subroutineCall
-                tokenizer.backtrack();
-                eat(Token::IDENTIFIER);
-                break;
             }
-        case Token::SYMBOL:
-            {
+
+            // if neither varName[expression] nor subroutineCall
+            tokenizer.backtrack();
+            eat(Token::IDENTIFIER);
+            break;
+        }
+        case Token::SYMBOL: {
                 // check if it is unary operator or parantheses
                 if (isUnaryOp(tokenizer.symbol())) {
-                    eat(tokenizer.symbol());
+                    char op = tokenizer.symbol();
+                    eat(op);
                     compileTerm();
+                    switch(op) {
+                        case '-':
+                            vm.writeArithmetic(Command::NEG);
+                            break;
+                        case '~':
+                            vm.writeArithmetic(Command::NOT);
+                            break;
+                        default:
+                            break;
+                    }
                 } else {
                     eat('(');
                     compileExpression();
                     eat(')');
                 }
                 break;
+        }
+        case Token::KEYWORD: {
+            Keyword k = eat(vector<Keyword> {Keyword::TRUE, Keyword::FALSE, Keyword::kNULL, Keyword::THIS});
+            switch(k) {
+                case Keyword::TRUE:
+                    vm.writePush(Segment::CONST, -1);
+                    break;
+                case Keyword::FALSE:
+                case Keyword::kNULL:
+                    vm.writePush(Segment::CONST, 0);
+                    break;
+                case Keyword::THIS:
+                    vm.writePush(Segment::POINTER, 0);
+                    break;
+                default:
+                    break;
             }
-        case Token::KEYWORD:
-            eat(vector<Keyword> {Keyword::TRUE, Keyword::FALSE, Keyword::kNULL, Keyword::THIS});
             break;
+        }
     }
 
     eatEnd("term");

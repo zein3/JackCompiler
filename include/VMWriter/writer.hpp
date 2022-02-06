@@ -21,6 +21,7 @@ enum class Buffer {
 
 ostream &operator<<(ostream &out, Segment seg);
 ostream &operator<<(ostream &out, Command cmd);
+Command charToCommand(char c);
 
 class VMWriter {
     ostream &fileBuffer;
