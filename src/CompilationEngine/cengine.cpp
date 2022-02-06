@@ -434,18 +434,40 @@ void CompilationEngine::compileLet() {
     eatBegin("letStatement");
 
     eat(Keyword::LET);
-    eat(Token::IDENTIFIER);
+    string varName = eat(Token::IDENTIFIER);
+
+    string *varType = sTable.typeOf(varName);
+    Kind *varKind = sTable.kindOf(varName);
+    size_t *varIndex = sTable.indexOf(varName);
+    if (varType == nullptr || varKind == nullptr || varIndex == nullptr) {
+        throw runtime_error(string("use of undeclared variable " + varName));
+    }
+
+    if (*varType == "Array") {
+        vm.writePush(kindToSegment(*varKind), *varIndex);
+    }
 
     // handle possibility of an array
     if (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() == '[') {
         eat('[');
         compileExpression();
         eat(']');
+
+        vm.writeArithmetic(Command::ADD);
     }
 
     eat('=');
     compileExpression();
     eat(';');
+
+    if (*varType == "Array") {
+        vm.writePop(Segment::TEMP, 0);
+        vm.writePop(Segment::POINTER, 1);
+        vm.writePush(Segment::TEMP, 0);
+        vm.writePop(Segment::THAT, 0);
+    } else {
+        vm.writePop(kindToSegment(*varKind), *varIndex);
+    }
 
     eatEnd("letStatement");
 }
