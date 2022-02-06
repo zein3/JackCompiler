@@ -614,10 +614,30 @@ void CompilationEngine::compileTerm() {
                     break;  /* break from the switch statement */
                 } else if (sym == '[') {
                     tokenizer.backtrack();
-                    eat(Token::IDENTIFIER);
+
+                    string arrName = eat(Token::IDENTIFIER);
+                    string *arrType = sTable.typeOf(arrName);
+                    Kind *arrKind = sTable.kindOf(arrName);
+                    size_t *arrLocation = sTable.indexOf(arrName);
+
+                    // Error checking
+                    if (arrType == nullptr || arrKind == nullptr || arrLocation == nullptr) {
+                        throw runtime_error(string("Use of undeclared array " + arrName));
+                    }
+                    if (*arrType != "Array") {
+                        throw runtime_error(string(arrName + " is not an array"));
+                    }
+
+                    vm.writePush(kindToSegment(*arrKind), *arrLocation);
+
                     eat('[');
                     compileExpression();
                     eat(']');
+
+                    vm.writeArithmetic(Command::ADD);
+                    vm.writePop(Segment::POINTER, 1);
+                    vm.writePush(Segment::THAT, 0);
+
                     break;
                 }
             }
