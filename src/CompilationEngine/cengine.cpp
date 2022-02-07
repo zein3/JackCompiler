@@ -187,6 +187,9 @@ string CompilationEngine::eatSubroutineCall() {
         }
     } else {
         callName = className + "." + callName;
+        // push the address of this
+        vm.writePush(Segment::POINTER, 0);
+        nArgs++;
     }
 
     eat('(');
@@ -698,7 +701,8 @@ void CompilationEngine::compileTerm() {
             Keyword k = eat(vector<Keyword> {Keyword::TRUE, Keyword::FALSE, Keyword::kNULL, Keyword::THIS});
             switch(k) {
                 case Keyword::TRUE:
-                    vm.writePush(Segment::CONST, -1);
+                    vm.writePush(Segment::CONST, 1);
+                    vm.writeArithmetic(Command::NEG);
                     break;
                 case Keyword::FALSE:
                 case Keyword::kNULL:
