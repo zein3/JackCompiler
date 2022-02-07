@@ -732,7 +732,7 @@ size_t CompilationEngine::compileExpressionList() {
     eatBegin("expressionList");
 
     // handle empty expression list
-    if (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() != '(') {
+    if (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() != '(' && !isUnaryOp(tokenizer.symbol())) {
         eatEnd("expressionList");
         return 0;
     }
