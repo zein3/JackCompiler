@@ -27,3 +27,7 @@ jackc {filename}
 ```bash
 jackc {dirname}
 ```
+  - Tips: use the --print-xml after the filename to print your parsed code to the standard output, this can be useful for debugging to see which part of your code generates the error
+```bash
+jackc {filename/dirname} --print-xml
+```
