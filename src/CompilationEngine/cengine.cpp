@@ -177,10 +177,12 @@ string CompilationEngine::eatSubroutineCall() {
         // is it a call to an object's method or a class's function?
         // if it exists in the symbol table, then it is object's method
         string *objClass = sTable.typeOf(callName);
+        Kind *objKind = sTable.kindOf(callName);
+        size_t *objIndex = sTable.indexOf(callName);
         if (objClass != nullptr) {
             callName = *objClass + "." + fnName;
-            // push this and add nArgs by 1
-            vm.writePush(Segment::POINTER, 0);
+            // push object pointer and add nArgs by 1
+            vm.writePush(kindToSegment(*objKind), *objIndex);
             nArgs++;
         } else {
             callName += "." + fnName;
