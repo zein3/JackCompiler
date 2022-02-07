@@ -26,10 +26,24 @@ Command charToCommand(char c);
 Segment kindToSegment(Kind k);
 
 class VMWriter {
-    ostream &fileBuffer;
-    ostringstream stringBuffer;
+    /*
+     *  file buffer stream and string buffer stream is created
+     *  because when creating a function in jack vm language
+     *  we need to know the number of local variables, yet
+     *  there is no way to tell until we actually compile
+     *  the subroutine bode, therefore before compiling
+     *  the body, we switch to the string buffer, and write there
+     *  then after we finish that, we switch to the file buffer (the real output stream)
+     *  write the function declaration, and then call writeNow() to
+     *  get the string buffer stream and put it into the file buffer
+     *
+     *  TLDR: put code for body in temporary var stringBuffer, output code for
+     *  function declaration, add stringBuffer after function declaration
+     */
+    ostream &fileBuffer;                            /* buffer for file, don't use this stream directly */
+    ostringstream stringBuffer;                     /* buffer for string, don't use this stream directly */
     ostream *output;
-    size_t uniq = 0;
+    size_t uniq = 0;                                /* starting id for generating a unique id */
 
     inline static const size_t INDENT_SIZE = 4;
 

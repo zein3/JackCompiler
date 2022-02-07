@@ -113,7 +113,7 @@ ostream &operator<<(ostream &out, Kind kind) {
 }
 
 void SymbolTable::printClassTable() {
-#if DEBUG
+#if DEBUGST
     cout << "Class Table: " << endl;
     for (auto it = classTable.begin(); it != classTable.end(); it++) {
         cout << it->first << ", " << it->second.type << ", " << it->second.kind << ", " << it->second.index << endl;
@@ -124,7 +124,7 @@ void SymbolTable::printClassTable() {
 }
 
 void SymbolTable::printSubroutineTable() {
-#if DEBUG
+#if DEBUGST
     cout << "Subroutine Table: " << endl;
     for (auto it = subroutineTable.begin(); it != subroutineTable.end(); it++) {
         cout << it->first << ", " << it->second.type << ", " << it->second.kind << ", " << it->second.index << endl;
