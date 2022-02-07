@@ -188,6 +188,7 @@ string CompilationEngine::eatSubroutineCall() {
     } else {
         callName = className + "." + callName;
         // push the address of this
+        // assume this is a method
         vm.writePush(Segment::POINTER, 0);
         nArgs++;
     }
@@ -436,6 +437,8 @@ void CompilationEngine::compileStatements() {
 void CompilationEngine::compileLet() {
     eatBegin("letStatement");
 
+    bool accessingArray = false;
+
     eat(Keyword::LET);
     string varName = eat(Token::IDENTIFIER);
 
@@ -446,12 +449,14 @@ void CompilationEngine::compileLet() {
         throw runtime_error(string("use of undeclared variable " + varName));
     }
 
-    if (*varType == "Array") {
-        vm.writePush(kindToSegment(*varKind), *varIndex);
-    }
-
     // handle possibility of an array
     if (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() == '[') {
+        if (*varType != "Array") {
+            throw runtime_error(string(varName + " is not an array"));
+        }
+        accessingArray = true;
+        vm.writePush(kindToSegment(*varKind), *varIndex);
+
         eat('[');
         compileExpression();
         eat(']');
@@ -463,7 +468,7 @@ void CompilationEngine::compileLet() {
     compileExpression();
     eat(';');
 
-    if (*varType == "Array") {
+    if (accessingArray) {
         vm.writePop(Segment::TEMP, 0);
         vm.writePop(Segment::POINTER, 1);
         vm.writePush(Segment::TEMP, 0);
