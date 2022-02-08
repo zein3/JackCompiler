@@ -21,7 +21,7 @@ void JackAnalyzer::analyzeFile(const fs::path &file) {
     ostream nullout(nullptr);
     ostream &outxml = printXml ? cout : nullout;
 
-    CompilationEngine engine(in, outvm, outxml);
+    CompilationEngine engine(in, outvm, outxml, table);
     engine.compileClass();
 }
 

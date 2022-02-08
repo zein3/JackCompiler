@@ -16,6 +16,7 @@ public:
     SymbolTable();
     
     void startSubroutine();
+    void startClass();                                  /* clear the class table of field, leaving only static variables */
     void define(string name, string type, Kind kind);
     size_t varCount(Kind kind);
 

@@ -24,6 +24,16 @@ Var *SymbolTable::find(string name) {
 }
 
 
+void SymbolTable::startClass() {
+    for (auto it = classTable.begin(); it != classTable.end();) {
+        if (it->second.kind != Kind::STATIC) {
+            it = classTable.erase(it);
+        } else {
+            it++;
+        }
+    }
+}
+
 void SymbolTable::startSubroutine() {
     subroutineTable.clear();
 }

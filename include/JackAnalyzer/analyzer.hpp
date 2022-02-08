@@ -1,6 +1,7 @@
 #ifndef _ANALYZER_HPP_
 #define _ANALYZER_HPP_
 
+#include <SymbolTable/table.hpp>
 #include <filesystem>
 #include <string>
 
@@ -13,6 +14,7 @@ class JackAnalyzer {
     static void analyzeDir(const fs::path &dir);
 public:
     inline static bool printXml = false;
+    inline static SymbolTable table;
 
     static bool analyze(string arg);
 };

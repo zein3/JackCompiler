@@ -228,6 +228,8 @@ void CompilationEngine::writeIndent() {
 /* Begin Public Methods */
 
 void CompilationEngine::compileClass() {
+    sTable.startClass();
+
     eatBegin("class");
     eat(Keyword::CLASS);
     className = tokenizer.identifier();

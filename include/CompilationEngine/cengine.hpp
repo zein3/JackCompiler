@@ -15,7 +15,7 @@ class CompilationEngine {
     string className = "";
     ostream &output;
     Tokenizer tokenizer;
-    SymbolTable sTable;
+    SymbolTable &sTable;
     VMWriter vm;
 
     const size_t INDENTSIZE = 2;
@@ -44,7 +44,8 @@ class CompilationEngine {
 
     CompilationEngine() = delete;
 public:
-    CompilationEngine(istream &in, ostream &outvm, ostream &outxml) : output{outxml}, tokenizer{in}, vm{outvm} {}
+    CompilationEngine(istream &in, ostream &outvm, ostream &outxml, SymbolTable &st)
+        : output{outxml}, tokenizer{in}, sTable {st}, vm{outvm} {}
 
     void compileClass();
     void compileClassVarDec();
