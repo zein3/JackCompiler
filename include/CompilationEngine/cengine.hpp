@@ -41,6 +41,7 @@ class CompilationEngine {
     bool isUnaryOp(char s);                     /* check if symbol s is a unary operator */
 
     string keywordToStr(Keyword key);
+    string generateLabel();
 
     CompilationEngine() = delete;
 public:

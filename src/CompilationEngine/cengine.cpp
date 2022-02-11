@@ -54,6 +54,10 @@ string CompilationEngine::keywordToStr(Keyword key) {
     }
 }
 
+string CompilationEngine::generateLabel() {
+    return className + vm.generateLabel();
+}
+
 // handle keyword
 void CompilationEngine::eat(Keyword key) {
     writeIndent();
@@ -487,8 +491,8 @@ void CompilationEngine::compileLet() {
 void CompilationEngine::compileIf() {
     eatBegin("ifStatement");
 
-    string label1 = vm.generateLabel();
-    string label2 = vm.generateLabel();
+    string label1 = generateLabel();
+    string label2 = generateLabel();
 
     eat(Keyword::IF);
     eat('(');
@@ -523,8 +527,8 @@ void CompilationEngine::compileIf() {
 void CompilationEngine::compileWhile() {
     eatBegin("whileStatement");
 
-    string label1 = vm.generateLabel();
-    string label2 = vm.generateLabel();
+    string label1 = generateLabel();
+    string label2 = generateLabel();
 
     vm.writeLabel(label1);
 
