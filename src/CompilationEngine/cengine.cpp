@@ -459,9 +459,6 @@ void CompilationEngine::compileLet() {
 
     // handle possibility of an array
     if (tokenizer.tokenType() == Token::SYMBOL && tokenizer.symbol() == '[') {
-        if (*varType != "Array") {
-            throw runtime_error(string(varName + " is not an array"));
-        }
         accessingArray = true;
         vm.writePush(kindToSegment(*varKind), *varIndex);
 
@@ -653,9 +650,6 @@ void CompilationEngine::compileTerm() {
                     // Error checking
                     if (arrType == nullptr || arrKind == nullptr || arrLocation == nullptr) {
                         throw runtime_error(string("Use of undeclared array " + arrName));
-                    }
-                    if (*arrType != "Array") {
-                        throw runtime_error(string(arrName + " is not an array"));
                     }
 
                     vm.writePush(kindToSegment(*arrKind), *arrLocation);
